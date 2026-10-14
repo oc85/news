@@ -740,6 +740,12 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .box.pos{background:var(--pos-bg);color:var(--pos);border-color:transparent}
 .kp{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px}
 .kp code{font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}.kp td:nth-child(4){width:42%}.kp td:nth-child(2){width:34%}.kp .muted{font-weight:400}
+.kpd{margin:6px 0 4px;font-size:13px;color:var(--muted)}
+details.kpd>summary{cursor:pointer;font-weight:400;margin:0;padding:4px 0;list-style:none}
+details.kpd>summary::-webkit-details-marker{display:none}
+details.kpd>summary::before{content:"\\25B8  ";font-size:11px}details.kpd[open]>summary::before{content:"\\25BE  "}
+.kpd .more{margin-left:8px;color:var(--link);text-decoration:underline}details.kpd[open] .more{display:none}
+.kpd .kp{margin-top:8px;color:var(--fg)}.kp td,.kp th{padding:5px 8px}
 .st-ok{color:var(--pos);font-weight:600}.st-bad{color:var(--neg);font-weight:600}
 ol{padding-left:26px}li{margin:0 0 14px}a{color:var(--link)}
 .ev{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding-left:9px;margin-top:4px}
@@ -873,13 +879,19 @@ def html_report(all_results, now):
             kp.append(f'<tr><td>{e(p["name"])}</td><td class="{"st-ok" if ok else "st-bad"}">{e(p["status"])}{msg}</td>'
                       f'<td class="n">{p["count"]}</td><td>{q[4:] if q else ""}</td></tr>')
         found = len(items) + sum(skipped.values())
+        bad = [p["name"] for p in providers if p["status"] not in ("ok", "no results")]
+        n_ok = len(providers) - len(bad)
         sec = [f'<h2 id="{anchor}">{e(kw)}</h2>',
-               '<h3>Search key points</h3><div class="kp"><div class="wrap"><table>'
+               f'<details class="kpd"><summary>Search key points: {n_ok} of {len(providers)} sources worked'
+               f'{(" · not working: " + e(", ".join(bad))) if bad else ""} · {found} found · {len(items)} analysed'
+               '<span class="more">show details</span></summary>'
+               '<div class="kp"><div class="wrap"><table>'
                '<tr><th>Source</th><th>Status</th><th class="n">Results</th><th>Query sent</th></tr>'
                + "".join(kp) + "</table></div>"
                f'<div>Results found: <b>{found}</b> (after removing {dupes} duplicates) · '
                f'left out: {skipped["older_than_24h"]} older than 24h, {skipped["no_date"]} without a date, '
-               f'{skipped["keyword_not_found"]} not mentioning the keyword · analysed: <b>{len(items)}</b></div></div>',
+               f'{skipped["keyword_not_found"]} not mentioning the keyword · analysed: <b>{len(items)}</b></div></div>'
+               '</details>',
                '<h3>Result</h3><div class="counts">'
                f'<div class="box neg"><b>{len(by["negative"])}</b>negative</div>'
                f'<div class="box pos"><b>{len(by["positive"])}</b>positive</div>'
